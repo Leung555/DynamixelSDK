@@ -25,10 +25,17 @@ ament_target_dependencies(read_write_node
   dynamixel_sdk
   rclcpp
 )
+add_executable(read_write_node_XL320 src/read_write_node_XL320.cpp)
+ament_target_dependencies(read_write_node_XL320
+  dynamixel_sdk_custom_interfaces
+  dynamixel_sdk
+  rclcpp
+)
 
 # Install
 install(TARGETS
   read_write_node
+  read_write_node_XL320
   DESTINATION lib/${PROJECT_NAME}
 )
 
