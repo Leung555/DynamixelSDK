@@ -15,26 +15,33 @@ find_package(ament_cmake REQUIRED)
 find_package(dynamixel_sdk REQUIRED)
 find_package(dynamixel_sdk_custom_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 include_directories(include)
 
 # Build
-add_executable(read_write_node src/read_write_node.cpp)
-ament_target_dependencies(read_write_node
-  dynamixel_sdk_custom_interfaces
-  dynamixel_sdk
-  rclcpp
-)
+# add_executable(read_write_node src/read_write_node.cpp)
+# ament_target_dependencies(read_write_node
+#   dynamixel_sdk_custom_interfaces
+#   dynamixel_sdk
+#   rclcpp
+#   std_msgs
+#   sensor_msgs
+# )
+
 add_executable(read_write_node_XL320 src/read_write_node_XL320.cpp)
 ament_target_dependencies(read_write_node_XL320
   dynamixel_sdk_custom_interfaces
   dynamixel_sdk
   rclcpp
+  std_msgs
+  sensor_msgs
 )
 
 # Install
 install(TARGETS
-  read_write_node
+  # read_write_node
   read_write_node_XL320
   DESTINATION lib/${PROJECT_NAME}
 )

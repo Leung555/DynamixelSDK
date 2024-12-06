@@ -66,7 +66,7 @@
 
 dynamixel::PortHandler * portHandler;
 dynamixel::PacketHandler * packetHandler;
-dynamixel::GroupSyncRead * groupSyncRead;
+// dynamixel::GroupSyncRead * groupSyncRead;
 dynamixel::GroupSyncWrite * groupSyncWrite;
 
 uint8_t dxl_error = 0;
@@ -86,39 +86,108 @@ ReadWriteNode::ReadWriteNode()
     rclcpp::QoS(rclcpp::KeepLast(qos_depth)).reliable().durability_volatile();
 
   set_position_subscriber_ =
-    this->create_subscription<SetPosition>(
+    this->create_subscription<Jointstate>(
     "set_position",
     QOS_RKL10V,
-    [this](const SetPosition::SharedPtr msg) -> void
+    [this](const Jointstate::SharedPtr msg) -> void
     {
       uint8_t dxl_error = 0;
 
       // Position Value of X series is 4 byte data.
       // For AX & MX(1.0) use 2 byte data(uint16_t) for the Position Value.
-      uint16_t goal_position = (unsigned int)msg->position;  // Convert int32 -> uint32
-      std::cout << "id : "  << int(msg->id) <<"\n" ;
-      std::cout << "msg: " << goal_position <<"\n" ;
+      // uint16_t goal_position = (unsigned int)msg->position;  // Convert int32 -> uint32
+      // std::cout << "id : "  << int(msg->name[0]) <<"\n" ;
+      // std::cout << "msg: " << goal_position <<"\n" ;
 
-      // Write Goal Position (length : 4 bytes)
-      // When writing 2 byte data to AX / MX(1.0), use write2ByteTxRx() instead.
-      dxl_comm_result =
-      packetHandler->write2ByteTxRx(
-        portHandler,
-        (uint8_t) msg->id,
-        ADDR_GOAL_POSITION,
-        goal_position,
-        &dxl_error
-      );
+      // // Write Goal Position (length : 4 bytes)
+      // // When writing 2 byte data to AX / MX(1.0), use write2ByteTxRx() instead.
+      // dxl_comm_result =
+      // packetHandler->write2ByteTxRx(
+      //   portHandler,
+      //   (uint8_t) std::stoi(msg->name[0]),
+      //   ADDR_GOAL_POSITION,
+      //   goal_position,
+      //   &dxl_error
+      // );
 
-      if (dxl_comm_result != COMM_SUCCESS) {
-        RCLCPP_INFO(this->get_logger(), "%s", packetHandler->getTxRxResult(dxl_comm_result));
-      } else if (dxl_error != 0) {
-        RCLCPP_INFO(this->get_logger(), "%s", packetHandler->getRxPacketError(dxl_error));
-      } else {
-        RCLCPP_INFO(this->get_logger(), "Set [ID: %d] [Goal Position: %d]", msg->id, msg->position);
+      // if (dxl_comm_result != COMM_SUCCESS) {
+      //   RCLCPP_INFO(this->get_logger(), "%s", packetHandler->getTxRxResult(dxl_comm_result));
+      // } else if (dxl_error != 0) {
+      //   RCLCPP_INFO(this->get_logger(), "%s", packetHandler->getRxPacketError(dxl_error));
+      // } else {
+      //   RCLCPP_INFO(this->get_logger(), "Set [ID: %d] [Goal Position: %d]", std::stoi(msg->name[0]), msg->position[0]);
+      // }
+
+      // Read Multiple present position from motors
+      // uint8_t goal_motor_cnt_msg = msg.position.size();
+      // uint8_t goal_id_array_uint8[goal_motor_cnt_msg];
+      // int16_t goal_position[goal_motor_cnt_msg];
+
+      // for(int dxl_cnt = 0; dxl_cnt< goal_motor_cnt_msg; dxl_cnt++){
+      //   goal_id_array_uint8[dxl_cnt] = (uint8_t) std::stoi(msg->name[dxl_cnt]);
+      //   goal_position[dxl_cnt] = msg->position[dxl_cnt];    
+      //   cout << "goal_id_array_uint8[dxl_cnt]: " << +dxl_cnt 
+      //       << "  goal_position[dxl_cnt]" << +goal_position[dxl_cnt] << endl;
+      // }
+
+      // // Create a buffer with a pointer to the data
+      // uint8_t *param_buffer_0 = &msg->position[0];
+      // uint8_t *param_buffer_1 = &msg->position[1];
+      // std::cout << "test: "  << param_buffer_0 << '\n';
+      // groupSyncWrite->addParam((uint8_t) std::stoi(msg->name[0]), param_buffer_0);
+      // groupSyncWrite->addParam((uint8_t) std::stoi(msg->name[1]), param_buffer_1);
+      // std::cout << "test"  << '\n';
+
+      // // Transmit SyncWrite Packet
+      // int dxl_comm_result = groupSyncWrite->txPacket();
+      // if (dxl_comm_result != COMM_SUCCESS) {
+      //     RCLCPP_ERROR(rclcpp::get_logger("dynamixel_node"), packetHandler->getTxRxResult(dxl_comm_result));
+      // }
+      // groupSyncWrite->clearParam();
+      // Goal positions
+      // uint8_t goalPosition1; // Target position for motor 1
+      // uint8_t goalPosition2; // Target position for motor 2
+
+      // // Prepare parameter storage
+      // uint8_t *paramGoalPosition1 = goalPosition1;
+      // uint8_t paramGoalPosition2[1];
+
+      // paramGoalPosition1[0] = DXL_LOBYTE(goalPosition1);
+      // paramGoalPosition1[1] = DXL_HIBYTE(goalPosition1);
+
+      // paramGoalPosition2[0] = DXL_LOBYTE(goalPosition2);
+      // paramGoalPosition2[1] = DXL_HIBYTE(goalPosition2);
+      uint8_t goal_position = (uint8_t)msg->position[0];
+      groupSyncWrite->addParam((uint8_t) DXL_ID1, &goal_position);
+      std::cout << "TEST" << '\n';
+      // Add parameters to syncWrite
+      // if (!groupSyncWrite->addParam(DXL_ID1, &goal_position)) { // Pass a pointer to goal_position
+      //     std::cerr << "Failed to add motor 1 parameters." << std::endl;
+      //     return;
+      // }
+      std::cout << 'TEST' << '\n';
+      // if (!groupSyncWrite->addParam(DXL_ID2, paramGoalPosition2)) {
+      //     std::cerr << "Failed to add motor 2 parameters." << std::endl;
+      //     return;
+      // }
+
+      // Execute syncWrite
+      if (groupSyncWrite->txPacket() != COMM_SUCCESS) {
+          std::cerr << "Failed to execute syncWrite!" << std::endl;
       }
+
+      // Clear parameter storage
+      groupSyncWrite->clearParam();
+
+
     }
     );
+
+    // set up Publisher
+    jointstates_publisher = this->create_publisher<Jointstate>("motor_feedback", 30);
+    // timer_ = this->create_wall_timer(
+    // 30ms, std::bind(&ReadWriteNode::readDxl_publish_callback, this));
+
 
   auto get_present_position =
     [this](
@@ -151,6 +220,11 @@ ReadWriteNode::ReadWriteNode()
 ReadWriteNode::~ReadWriteNode()
 {
 }
+
+// void ReadWriteNode::readDxl_publish_callback()
+// {
+
+// }
 
 void setupDynamixel(uint8_t dxl_id)
 {
@@ -189,6 +263,10 @@ int main(int argc, char * argv[])
 {
   portHandler = dynamixel::PortHandler::getPortHandler(DEVICE_NAME);
   packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
+  
+  // Initialize GroupSyncWrite
+  // groupSyncWrite = dynamixel::GroupSyncWrite::(portHandler, packetHandler, ADDR_GOAL_POSITION, LEN_GOAL_POSITION);
+  dynamixel::GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR_GOAL_POSITION, LEN_GOAL_POSITION);
 
   // Open Serial Port
   dxl_comm_result = portHandler->openPort();

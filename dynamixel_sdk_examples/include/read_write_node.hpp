@@ -25,18 +25,26 @@
 #include "dynamixel_sdk_custom_interfaces/msg/set_position.hpp"
 #include "dynamixel_sdk_custom_interfaces/srv/get_position.hpp"
 
+#include "sensor_msgs/msg/joint_state.hpp"
 
 class ReadWriteNode : public rclcpp::Node
 {
 public:
-  using SetPosition = dynamixel_sdk_custom_interfaces::msg::SetPosition;
+  using Jointstate = sensor_msgs::msg::JointState;
+  // using SetPosition = dynamixel_sdk_custom_interfaces::msg::SetPosition;
   using GetPosition = dynamixel_sdk_custom_interfaces::srv::GetPosition;
 
   ReadWriteNode();
   virtual ~ReadWriteNode();
+	void readDxl_publish_callback();
+
+	std::map<std::string, uint8_t> motorNameIDPair;
 
 private:
-  rclcpp::Subscription<SetPosition>::SharedPtr set_position_subscriber_;
+	rclcpp::Publisher<Jointstate>::SharedPtr jointstates_publisher;
+	rclcpp::Subscription<Jointstate>::SharedPtr set_position_subscriber_;
+
+  // rclcpp::Subscription<SetPosition>::SharedPtr set_position_subscriber_;
   rclcpp::Service<GetPosition>::SharedPtr get_position_server_;
 
   int present_position;
